@@ -1,5 +1,5 @@
 import fs from "fs";
-import {execPromise} from "./execPromise";
+import {execPromise} from "../helpers/execPromise";
 
 async function workFile(path: string) {
   const newPath = `${path}.pdf`;
