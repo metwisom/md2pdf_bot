@@ -1,4 +1,7 @@
-sudo apt install pandoc
-sudo apt install texlive-xetex
-sudo apt install librsvg2-bin
-sudo apt install inkscape librsvg2-bin
+```bash
+sudo apt install pandoc texlive-xetex
+```
+
+```bash
+node --env-file=.env dist/main.js
+```

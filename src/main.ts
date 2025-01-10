@@ -6,6 +6,10 @@ import {generateRandomString} from './generateRandomString';
 import {getFileExtension} from './getFileExtension';
 import {fileIsValid} from './fileIsValid';
 import {replaceSvg} from './replaceSvg';
+import fs from "fs";
+import {convertMermaidToPng} from "./convertMermaidToPng";
+import {getFilePath} from "./getFilePath";
+
 
 process.env.NTBA_FIX_350 = true;
 
@@ -62,6 +66,33 @@ bot.on('message', async (msg) => {
       throw new Error('Ошибка при обработке вашего файла');
     });
     Log.log('документ очищен от svg');
+
+    Log.log('обработка meramid');
+    const merTmpPath = getFilePath(tmpPath) + generateRandomString(10) +"/"
+    const file = fs.readFileSync(tmpPath).toString();
+    let clearFile = file.replaceAll(/<pre>.*?<\/pre>/gs,'')
+    const match = clearFile.match(/```mermaid(?<val>.*?)```/gs)
+
+    if(!fs.existsSync(merTmpPath)) {
+      fs.mkdirSync(merTmpPath);
+    }
+
+    const result = match?.map(async (i,v) => {
+      const value = /```mermaid(?<val>.*?)```/gsm.exec(i)
+      if(value != undefined)
+        fs.writeFileSync(merTmpPath + v + '.mmd',value[1] as string)
+      const inputFile = merTmpPath + v + '.mmd';
+      const outputFile = merTmpPath + v + '.png';
+      await convertMermaidToPng(inputFile, outputFile).catch(console.error);
+      if (value && value[0]) {
+        clearFile = clearFile.replace(value[0].toString(), "![mermaid_"+v+"](" + outputFile + ")");
+      }
+    })
+    if(result && result.length > 0) {
+      await Promise.all(result)
+    }
+    fs.writeFileSync(tmpPath,clearFile)
+    Log.log('документ обработан для mermaid');
 
     Log.log('конвертация файла');
     const newPath = await workFile(tmpPath).catch(err => {
