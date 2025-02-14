@@ -2,9 +2,15 @@ import fs from 'fs/promises';
 import chardet from 'chardet';
 
 
-async function validateFileEncoding(filePath: string): Promise<boolean> {
+async function validateFileEncoding(filePath: string): Promise<void> {
+  return new Promise(async (resolve, reject) => {
     const fileBuffer = await fs.readFile(filePath);
-    return chardet.detect(fileBuffer) == 'UTF-8';
+    if (chardet.detect(fileBuffer) != 'UTF-8') {
+      reject(chardet.detect(fileBuffer)?.toString());
+    } else {
+      resolve();
+    }
+  });
 }
 
-export { validateFileEncoding };
+export {validateFileEncoding};

@@ -41,9 +41,10 @@ bot.on('message', async (msg) => {
     });
 
     Log.log('проверка на UTF-8');
-    if (!(await validateFileEncoding(tmpPath))) {
+    await validateFileEncoding(tmpPath).catch(err => {
+      Log.log(err);
       throw new Error('Отправьте документ в кодировке UTF-8');
-    }
+    })
 
     Log.log('очистка от svg');
     await replaceSvgLinks(tmpPath).catch(err => {
@@ -107,7 +108,7 @@ bot.on('message', async (msg) => {
             });
           })
           .catch(async err => {
-            await bot.sendMessage(chatId, err);
+             await bot.sendMessage(chatId, err.message);
           });
 
 
