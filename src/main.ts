@@ -9,17 +9,12 @@ import {replaceSvgLinks} from './utils/replaceSvgLinks';
 import fs from "fs";
 import {convertMermaidToPng} from "./utils/convertMermaidToPng";
 import {getFilePath} from "./helpers/getFilePath";
+import {config} from "./config";
 
 
-process.env.NTBA_FIX_350 = true;
-
-const bot = new TelegramBot(process.env.BOT_TOKEN, {polling: true});
-
-
-bot.on('message', async (msg) => {
+const eventHandler = async (msg: TelegramBot.Message) => {
 
   const Log = new Logger();
-  const chatId = msg.chat.id;
   Log.setPrefix(msg.message_id.toString());
 
   const convertMDtoPDF = async function (url: string, filename: string) {
@@ -44,7 +39,7 @@ bot.on('message', async (msg) => {
     await validateFileEncoding(tmpPath).catch(err => {
       Log.log(err);
       throw new Error('Отправьте документ в кодировке UTF-8');
-    })
+    });
 
     Log.log('очистка от svg');
     await replaceSvgLinks(tmpPath).catch(err => {
@@ -86,6 +81,7 @@ bot.on('message', async (msg) => {
   };
 
 
+  const chatId = msg.chat.id;
 
   Log.log(`новый запрос, message_id: ${msg.message_id}, chat_id: ${chatId}`);
 
@@ -100,17 +96,20 @@ bot.on('message', async (msg) => {
   const originalFileName = msg.document.file_name as string;
 
 
-  convertMDtoPDF(fileUrl, originalFileName)
-          .then(async newPath => {
-            await bot.sendDocument(chatId, newPath, {}, {
-              filename: `${originalFileName}.pdf`,
-              contentType: 'application/pdf',
-            });
-          })
-          .catch(async err => {
-             await bot.sendMessage(chatId, err.message);
-          });
+  await convertMDtoPDF(fileUrl, originalFileName)
+    .then(async newPath =>
+      await bot.sendDocument(chatId, newPath, {},
+        {
+          filename: `${originalFileName}.pdf`,
+          contentType: 'application/pdf',
+        }))
+    .catch(async err => {
+      await bot.sendMessage(chatId, err.message);
+    });
 
 
   Log.log('обработка завершена');
-});
+};
+
+const bot = new TelegramBot(config.botToken, {polling: true});
+bot.on('message', eventHandler);
