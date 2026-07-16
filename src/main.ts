@@ -111,5 +111,5 @@ const eventHandler = async (msg: TelegramBot.Message) => {
   Log.log('обработка завершена');
 };
 
-const bot = new TelegramBot(config.botToken, {polling: true});
+const bot = new TelegramBot(config.botToken, {polling: true, baseApiUrl: config.telegramApiUrl});
 bot.on('message', eventHandler);
