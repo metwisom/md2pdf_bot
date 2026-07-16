@@ -93,6 +93,7 @@ const eventHandler = async (msg: TelegramBot.Message) => {
 
   const fileId = msg.document.file_id;
   const fileUrl = await bot.getFileLink(fileId);
+  Log.log(`ссылка на файл: ${fileUrl}`);
   const originalFileName = msg.document.file_name as string;
 
 
